@@ -1,6 +1,12 @@
 # gong
 Gong! - The Go Pong
 
-Retro Pong game using ebiten as game library.
+Retro style Pong game using ebiten as game library.
+
+Type 
+''''
+go cmd/main.go
+''''
+to start
 
 ![Screenshot](screenshot.png)
