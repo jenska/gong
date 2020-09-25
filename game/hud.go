@@ -1,4 +1,4 @@
-package gong
+package game
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	scanlines, _, err = ebitenutil.NewImageFromFile("scanlines.png", ebiten.FilterDefault)
+	scanlines, _, err = ebitenutil.NewImageFromFile("game/scanlines.png", ebiten.FilterDefault)
 	if err != nil {
 		log.Fatal(err)
 	}

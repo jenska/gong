@@ -1,4 +1,4 @@
-package gong
+package game
 
 import (
 	"github.com/hajimehoshi/ebiten"

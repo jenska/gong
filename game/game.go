@@ -1,4 +1,4 @@
-package gong
+package game
 
 import (
 	"image/color"
