@@ -9,24 +9,21 @@ import (
 	"github.com/hajimehoshi/ebiten/inpututil"
 )
 
-// Gong game object
 type (
 	gameState byte
-	Gong      struct {
-		state   gameState
-		sprites []sprite
-		score   []int
-		mode    []bool
+
+	// Gong game object
+	Gong struct {
+		state                    gameState
+		objects                  []gameObject
+		ball                     *ball
+		score1, score2           int
+		isComputer1, isComputer2 bool
 	}
 
-	sprite interface {
+	gameObject interface {
 		update(g *Gong)
 		draw(screen *ebiten.Image)
-	}
-
-	xyBuffer struct {
-		x []float64
-		y []float64
 	}
 )
 
@@ -61,15 +58,13 @@ func NewGong() *Gong {
 }
 
 func (g *Gong) reset() {
-	ball := newBall()
-	g.sprites = []sprite{
-		newPaddle(leftPlayer, ball),
-		ball,
-		newPaddle(rightPlayer, ball),
+	g.ball = newBall()
+	g.objects = []gameObject{
+		newPaddle(leftPlayer, &g.score1, &g.isComputer1),
+		g.ball,
+		newPaddle(rightPlayer, &g.score2, &g.isComputer2),
 		newHUD(),
 	}
-	g.score = []int{0, 0}
-	g.mode = []bool{false, false}
 	g.state = start
 
 }
@@ -89,14 +84,12 @@ func (g *Gong) Update(screen *ebiten.Image) error {
 		if inpututil.IsKeyJustPressed(ebiten.KeyH) {
 			g.state = controls
 		} else if inpututil.IsKeyJustPressed(ebiten.KeyA) {
-			g.mode[leftPlayer] = true
+			g.isComputer1 = true
 			g.state = play
 		} else if inpututil.IsKeyJustPressed(ebiten.KeyV) {
-			g.mode[leftPlayer] = false
 			g.state = play
 		} else if inpututil.IsKeyJustPressed(ebiten.KeyB) {
-			g.mode[leftPlayer] = true
-			g.mode[rightPlayer] = true
+			g.isComputer1, g.isComputer2 = true, true
 			g.state = play
 		}
 	case controls:
@@ -118,11 +111,12 @@ func (g *Gong) Update(screen *ebiten.Image) error {
 			g.reset()
 		}
 	case interrupt:
+		g.ball.reset()
 		time.Sleep(time.Second / 2)
 		g.state = play
 	}
 
-	for _, object := range g.sprites {
+	for _, object := range g.objects {
 		object.update(g)
 	}
 	return nil
@@ -131,25 +125,8 @@ func (g *Gong) Update(screen *ebiten.Image) error {
 // Draw updates the game screen elements drawn
 func (g *Gong) Draw(screen *ebiten.Image) {
 	screen.Fill(screenColor)
-	for _, object := range g.sprites {
+	for _, object := range g.objects {
 		object.draw(screen)
 	}
 	//ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()))
-}
-
-func (b *xyBuffer) save(x, y float64) {
-	if b.size() < 3 {
-		b.x = append(b.x, x)
-		b.y = append(b.y, y)
-	} else {
-		b.x = append(b.x[1:], x)
-		b.y = append(b.y[1:], y)
-	}
-}
-func (b *xyBuffer) size() int {
-	if b.x == nil {
-		b.x = make([]float64, 0)
-		b.y = make([]float64, 0)
-	}
-	return len(b.x)
 }

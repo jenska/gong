@@ -8,12 +8,8 @@ const (
 )
 
 type ball struct {
-	x, y       float64
-	xv, yv     float64
-	image      *ebiten.Image
-	ghostImage *ebiten.Image
-	visible    bool
-	fader      xyBuffer
+	sprite
+	xv, yv float64
 }
 
 func newBall() *ball {
@@ -44,23 +40,5 @@ func (b *ball) update(g *Gong) {
 			b.yv = -b.yv
 			b.y = ballRadius
 		}
-	}
-}
-
-func (b *ball) draw(screen *ebiten.Image) {
-	if b.visible {
-		op1 := &ebiten.DrawImageOptions{}
-		op1.GeoM.Translate(b.x+5, b.y)
-		screen.DrawImage(b.ghostImage, op1)
-
-		op1.GeoM.Translate(-5, 0)
-		screen.DrawImage(b.image, op1)
-		for i := 0; i < b.fader.size(); i++ {
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(b.fader.x[i], b.fader.y[i])
-			op.ColorM.Scale(1.0, 1.0, 1.0, float64(i)/15.0)
-			screen.DrawImage(b.image, op)
-		}
-		b.fader.save(b.x, b.y)
 	}
 }
