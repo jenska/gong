@@ -9,16 +9,17 @@ const (
 	paddleWidth  = 20
 	paddleHeight = 100
 	paddleShift  = 50
-	paddleSpeed  = 10.0
+
+	paddleAcceleration = 1
 )
 
 type paddle struct {
 	sprite
+	yVelocity      float64
 	player         int
 	isComputer     *bool
 	score          *int
 	upKey, downKey ebiten.Key
-	up, down       bool
 }
 
 func newPaddle(player int, score *int, mode *bool) *paddle {
@@ -49,40 +50,37 @@ func (p *paddle) update(g *Gong) {
 		if *p.isComputer {
 			p.y = g.ball.y - paddleHeight/2
 		} else {
-
-			if inpututil.IsKeyJustPressed(p.upKey) {
-				p.up, p.down = true, false
-			} else if inpututil.IsKeyJustReleased(p.upKey) || !ebiten.IsKeyPressed(p.upKey) {
-				p.up = false
+			if inpututil.KeyPressDuration(p.upKey) > 0 {
+				p.yVelocity -= paddleAcceleration
 			}
-			if inpututil.IsKeyJustPressed(p.downKey) {
-				p.down, p.up = true, false
-			} else if inpututil.IsKeyJustReleased(p.downKey) || !ebiten.IsKeyPressed(p.downKey) {
-				p.down = false
+			if inpututil.KeyPressDuration(p.downKey) > 0 {
+				p.yVelocity += paddleAcceleration
 			}
 
-			if p.up {
-				p.y -= paddleSpeed
-			} else if p.down {
-				p.y += paddleSpeed
-			}
+			p.y += p.yVelocity
 
 			if p.y < 0 {
 				p.y = 1.0
+				p.yVelocity = 0
 			} else if p.y+paddleHeight > windowHeight {
 				p.y = windowHeight - paddleHeight - 1.0
+				p.yVelocity = 0
 			}
 
 		}
 
-		// bounce ball off paddle
+		// inelastic collision
 		if p.intersects(&g.ball.sprite) {
 			if p.player == leftPlayer {
 				g.ball.x = p.x + paddleWidth/2 + ballRadius
-				g.ball.xv = -g.ball.xv
 			} else {
 				g.ball.x = p.x - paddleWidth/2 - ballRadius
-				g.ball.xv = -g.ball.xv
+			}
+			g.ball.xVelocity = -g.ball.xVelocity - ballAcceleration
+			if g.ball.yVelocity > 0 {
+				g.ball.yVelocity += ballAcceleration
+			} else {
+				g.ball.yVelocity -= ballAcceleration
 			}
 		}
 
