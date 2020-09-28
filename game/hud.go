@@ -16,6 +16,7 @@ import (
 const (
 	fontSize       = 30
 	smallFontSize  = fontSize / 2
+	bigFontSize    = fontSize * 2
 	ghostTextShift = 10
 )
 
@@ -24,13 +25,13 @@ type hud struct {
 	message string
 	hints   []string
 	scores  string
+	splash  string
 }
 
 var (
-	tt              *truetype.Font
-	scanlines       *ebiten.Image
-	arcadeFont      font.Face
-	smallArcadeFont font.Face
+	tt          *truetype.Font
+	scanlines   *ebiten.Image
+	arcadeFonts = make(map[int]font.Face)
 )
 
 func init() {
@@ -43,12 +44,17 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	arcadeFont = truetype.NewFace(tt, &truetype.Options{
+
+	arcadeFonts[fontSize] = truetype.NewFace(tt, &truetype.Options{
 		Size: fontSize, DPI: 72, Hinting: font.HintingFull,
 	})
-	smallArcadeFont = truetype.NewFace(tt, &truetype.Options{
+	arcadeFonts[smallFontSize] = truetype.NewFace(tt, &truetype.Options{
 		Size: smallFontSize, DPI: 72, Hinting: font.HintingFull,
 	})
+	arcadeFonts[bigFontSize] = truetype.NewFace(tt, &truetype.Options{
+		Size: bigFontSize, DPI: 72, Hinting: font.HintingFull,
+	})
+
 }
 
 func newHUD() *hud {
@@ -65,6 +71,7 @@ func (h *hud) update(g *Gong) {
 	h.message = ""
 	h.hints = []string{}
 	h.scores = ""
+	h.splash = ""
 
 	player1, player2 := "PLAYER 1", "PLAYER 2"
 	if g.isComputer1 {
@@ -105,7 +112,10 @@ func (h *hud) update(g *Gong) {
 			"",
 			"SPACE -> RESUME ",
 			"R     -> RESTART"}
-	case play, interrupt:
+	case interrupt:
+		h.splash = fmt.Sprintf("%d : %d", g.score1, g.score2)
+		fallthrough
+	case play:
 		h.message = "SPACE -> PAUSE"
 		h.scores = fmt.Sprintf("%s: %d <-> %s: %d", player1, g.score1, player2, g.score2)
 	case gameOver:
@@ -119,16 +129,17 @@ func (h *hud) update(g *Gong) {
 }
 
 func (h *hud) draw(screen *ebiten.Image) {
-	drawText(windowHeight-4-2*smallFontSize, h.message, smallArcadeFont, smallFontSize, screen)
+	drawText(windowHeight-4-2*smallFontSize, h.message, smallFontSize, screen)
 	for row, hint := range h.hints {
-		drawText((row+4)*fontSize, hint, arcadeFont, fontSize, screen)
+		drawText((row+4)*fontSize, hint, fontSize, screen)
 	}
-	drawText(60, h.scores, smallArcadeFont, smallFontSize, screen)
+	drawText(60, h.scores, smallFontSize, screen)
+	drawText((windowHeight+bigFontSize)/2, h.splash, bigFontSize, screen)
 	screen.DrawImage(h.image, nil)
 }
 
-func drawText(y int, str string, font font.Face, size int, screen *ebiten.Image) {
+func drawText(y int, str string, size int, screen *ebiten.Image) {
 	x := (windowWidth - len(str)*size) / 2
-	text.Draw(screen, str, font, x+ghostTextShift, y, ghostColor)
-	text.Draw(screen, str, font, x, y, objectColor)
+	text.Draw(screen, str, arcadeFonts[size], x+ghostTextShift, y, ghostColor)
+	text.Draw(screen, str, arcadeFonts[size], x, y, objectColor)
 }
