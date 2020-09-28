@@ -29,17 +29,19 @@ func (b *ball) reset() {
 }
 
 func (b *ball) update(g *Gong) {
-	b.visible = g.state == play || g.state == interrupt
 	if g.state == play {
 		b.x += b.xVelocity
 		b.y += b.yVelocity
 
 		if b.y-ballRadius > windowHeight {
+			playSound(ping)
 			b.yVelocity = -b.yVelocity
 			b.y = windowHeight - ballRadius
 		} else if b.y+ballRadius < 0 {
+			playSound(ping)
 			b.yVelocity = -b.yVelocity
 			b.y = ballRadius
 		}
 	}
+	b.visible = g.state == play || g.state == interrupt
 }

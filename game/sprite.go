@@ -1,6 +1,10 @@
 package game
 
-import "github.com/hajimehoshi/ebiten"
+import (
+	"github.com/hajimehoshi/ebiten"
+)
+
+const ghostShift = 5
 
 type sprite struct {
 	x, y    float64
@@ -27,14 +31,14 @@ func (s *sprite) draw(screen *ebiten.Image) {
 		for i := 0; i < s.bufferSize(); i++ {
 			op = &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(s.xbuffer[i], s.ybuffer[i])
-			op.ColorM.Scale(1.0, 1.0, 1.0, float64(i)/10.0)
+			op.ColorM.Scale(1.0, 1.0, 1.0, float64(i)*0.1)
 			screen.DrawImage(s.image, op)
 		}
 
 		op = &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(s.x+5, s.y)
+		op.GeoM.Translate(s.x+ghostShift, s.y)
 		screen.DrawImage(s.ghostImage, op)
-		op.GeoM.Translate(-5, 0)
+		op.GeoM.Translate(-ghostShift, 0)
 		screen.DrawImage(s.image, op)
 
 		if s.bufferSize() < 3 {

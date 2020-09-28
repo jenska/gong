@@ -2,6 +2,7 @@ package game
 
 import (
 	"image/color"
+	"math"
 	"os"
 	"time"
 
@@ -52,6 +53,9 @@ var (
 
 // NewGong creates a new gong object
 func NewGong() *Gong {
+	ebiten.SetWindowSize(windowWidth, windowHeight)
+	ebiten.SetWindowTitle("Gong! - The Go Pong")
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Gong{}
 	g.reset()
 	return g
@@ -66,12 +70,19 @@ func (g *Gong) reset() {
 		newHUD(),
 	}
 	g.state = start
-
 }
 
 // Layout sets the screen layout
 func (g *Gong) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return windowWidth, windowHeight
+}
+
+func isMenuSelected(key ebiten.Key) bool {
+	if inpututil.IsKeyJustPressed(key) {
+		playSound(menuSelect)
+		return true
+	}
+	return false
 }
 
 // Update game state and sprites
@@ -81,33 +92,39 @@ func (g *Gong) Update(screen *ebiten.Image) error {
 	}
 	switch g.state {
 	case start:
-		if inpututil.IsKeyJustPressed(ebiten.KeyH) {
+		if isMenuSelected(ebiten.KeyH) {
 			g.state = controls
-		} else if inpututil.IsKeyJustPressed(ebiten.KeyA) {
-			g.isComputer1 = true
+		} else if isMenuSelected(ebiten.KeyA) {
+			g.isComputer1, g.isComputer2 = true, false
 			g.state = play
-		} else if inpututil.IsKeyJustPressed(ebiten.KeyV) {
+		} else if isMenuSelected(ebiten.KeyV) {
 			g.state = play
-		} else if inpututil.IsKeyJustPressed(ebiten.KeyB) {
+		} else if isMenuSelected(ebiten.KeyB) {
 			g.isComputer1, g.isComputer2 = true, true
 			g.state = play
+		} else if isMenuSelected(ebiten.KeyF) {
+			ebiten.SetFullscreen(!ebiten.IsFullscreen())
+		} else if isMenuSelected(ebiten.KeyW) {
+			sl.volume = math.Min(1.0, sl.volume+0.1)
+		} else if isMenuSelected(ebiten.KeyS) {
+			sl.volume = math.Max(0.0, sl.volume-0.1)
 		}
 	case controls:
-		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		if isMenuSelected(ebiten.KeySpace) {
 			g.state = start
 		}
 	case pause:
-		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		if isMenuSelected(ebiten.KeySpace) {
 			g.state = play
-		} else if inpututil.IsKeyJustPressed(ebiten.KeyR) {
+		} else if isMenuSelected(ebiten.KeyR) {
 			g.reset()
 		}
 	case play:
-		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		if isMenuSelected(ebiten.KeySpace) {
 			g.state = pause
 		}
 	case gameOver:
-		if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		if isMenuSelected(ebiten.KeySpace) {
 			g.reset()
 		}
 	case interrupt:
@@ -125,6 +142,7 @@ func (g *Gong) Update(screen *ebiten.Image) error {
 // Draw updates the game screen elements drawn
 func (g *Gong) Draw(screen *ebiten.Image) {
 	screen.Fill(screenColor)
+
 	for _, object := range g.objects {
 		object.draw(screen)
 	}

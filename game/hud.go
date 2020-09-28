@@ -14,8 +14,9 @@ import (
 )
 
 const (
-	fontSize      = 30
-	smallFontSize = fontSize / 2
+	fontSize       = 30
+	smallFontSize  = fontSize / 2
+	ghostTextShift = 10
 )
 
 type hud struct {
@@ -77,12 +78,16 @@ func (h *hud) update(g *Gong) {
 	case start:
 		h.hints = []string{
 			"",
-			"      GONG!      ",
+			"GONG!",
 			"",
-			"H -> HELP         ",
-			"V -> TWO PLAYERS  ",
-			"A -> AI VS PLAYER ",
-			"B -> AI VS AI     "}
+			"V   -> TWO PLAYERS ",
+			"A   -> AI VS PLAYER",
+			"B   -> AI VS AI    ",
+			"",
+			"F   -> Fullscreen  ",
+			fmt.Sprintf("W/S -> Volume %3d%% ", int(sl.volume*100)),
+			"H   -> HELP        ",
+			"ESC -> Exit        "}
 	case controls:
 		h.hints = []string{
 			"",
@@ -92,9 +97,7 @@ func (h *hud) update(g *Gong) {
 			"",
 			"PLAYER 2:  ",
 			"ARROW UP   ",
-			"ARROW DOWN ",
-			"",
-			"ESC -> EXIT"}
+			"ARROW DOWN "}
 		h.message = "SPACE -> main menu"
 	case pause:
 		h.hints = []string{
@@ -105,7 +108,6 @@ func (h *hud) update(g *Gong) {
 	case play, interrupt:
 		h.message = "SPACE -> PAUSE"
 		h.scores = fmt.Sprintf("%s: %d <-> %s: %d", player1, g.score1, player2, g.score2)
-
 	case gameOver:
 		winner := player1
 		if g.score2 > g.score1 {
@@ -127,6 +129,6 @@ func (h *hud) draw(screen *ebiten.Image) {
 
 func drawText(y int, str string, font font.Face, size int, screen *ebiten.Image) {
 	x := (windowWidth - len(str)*size) / 2
-	text.Draw(screen, str, font, x+10, y, ghostColor)
+	text.Draw(screen, str, font, x+ghostTextShift, y, ghostColor)
 	text.Draw(screen, str, font, x, y, objectColor)
 }

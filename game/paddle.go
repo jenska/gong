@@ -6,10 +6,9 @@ import (
 )
 
 const (
-	paddleWidth  = 20
-	paddleHeight = 100
-	paddleShift  = 50
-
+	paddleWidth        = 20
+	paddleHeight       = 80
+	paddleShift        = 50
 	paddleAcceleration = 1
 )
 
@@ -45,7 +44,6 @@ func newPaddle(player int, score *int, mode *bool) *paddle {
 }
 
 func (p *paddle) update(g *Gong) {
-	p.visible = g.state == play || g.state == interrupt
 	if g.state == play {
 		if *p.isComputer {
 			p.y = g.ball.y - paddleHeight/2
@@ -62,15 +60,18 @@ func (p *paddle) update(g *Gong) {
 			if p.y < 0 {
 				p.y = 1.0
 				p.yVelocity = 0
+				playSound(ping)
 			} else if p.y+paddleHeight > windowHeight {
 				p.y = windowHeight - paddleHeight - 1.0
 				p.yVelocity = 0
+				playSound(ping)
 			}
 
 		}
 
 		// inelastic collision
 		if p.intersects(&g.ball.sprite) {
+			playSound(pong)
 			if p.player == leftPlayer {
 				g.ball.x = p.x + paddleWidth/2 + ballRadius
 			} else {
@@ -88,10 +89,13 @@ func (p *paddle) update(g *Gong) {
 		if (g.ball.x < 0 && p.player == rightPlayer) || (g.ball.x > windowWidth && p.player == leftPlayer) {
 			*p.score++
 			g.state = interrupt
-		}
-
-		if *p.score > maxScore {
-			g.state = gameOver
+			if *p.score > maxScore {
+				playSound(win)
+				g.state = gameOver
+			} else {
+				playSound(lost)
+			}
 		}
 	}
+	p.visible = g.state == play || g.state == interrupt
 }
