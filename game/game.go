@@ -98,6 +98,7 @@ func (g *Gong) Update(screen *ebiten.Image) error {
 			g.isComputer1, g.isComputer2 = true, false
 			g.state = play
 		} else if isMenuSelected(ebiten.KeyV) {
+			g.isComputer1, g.isComputer2 = false, false
 			g.state = play
 		} else if isMenuSelected(ebiten.KeyB) {
 			g.isComputer1, g.isComputer2 = true, true
