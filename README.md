@@ -5,7 +5,7 @@ Retro style Pong game based upon ebiten game framework.
 With go installed, just type
 
 ```bash
-go install github/jenska/gong
+go install github.com/jenska/gong
 ```
 
 to start
