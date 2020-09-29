@@ -22,5 +22,6 @@ to start
 
 - ~~update package structure~~
 - ~~stereo sounds~~
+- ~~make window resizable~~
 - AI support (beat the computer opponent, computer vs computer becomes more interessting)
 - WebAssembly support

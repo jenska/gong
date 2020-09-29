@@ -56,6 +56,7 @@ func NewGong() *Gong {
 	ebiten.SetWindowSize(windowWidth, windowHeight)
 	ebiten.SetWindowTitle("Gong! - The Go Pong")
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+	ebiten.SetWindowResizable(true)
 	g := &Gong{}
 	g.reset()
 	return g
