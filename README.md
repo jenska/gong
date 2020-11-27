@@ -1,8 +1,8 @@
 # Gong! - The Go Pong
 
-Retro styled classic [Pong](https://en.wikipedia.org/wiki/Pong) clone based upon [ebiten](https://ebiten.org/) game framework.
+Retro styled classic [Pong](https://en.wikipedia.org/wiki/Pong) clone based upon [Ebiten](https://ebiten.org/) game framework.
 
-With go installed, just type
+With go version 14 or above installed, type
 
 ```bash
 git clone http://github.com/jenska/gong
@@ -23,5 +23,6 @@ to start
 - ~~update package structure~~
 - ~~stereo sounds~~
 - ~~make window resizable~~
+- embedded assets
 - AI support (beat the computer opponent, computer vs computer becomes more interessting)
 - WebAssembly support
