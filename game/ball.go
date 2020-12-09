@@ -1,9 +1,9 @@
 package game
 
-import "github.com/hajimehoshi/ebiten"
+import ebiten "github.com/hajimehoshi/ebiten/v2"
 
 const (
-	ballRadius       = 10.0
+	ballRadius       = 10
 	ballVelocity     = 5.0
 	ballAcceleration = 0.1
 )
@@ -16,9 +16,9 @@ type ball struct {
 func newBall() *ball {
 	b := &ball{}
 	b.reset()
-	b.image, _ = ebiten.NewImage(ballRadius*2, ballRadius*2, ebiten.FilterDefault)
+	b.image = ebiten.NewImage(ballRadius*2, ballRadius*2)
 	b.image.Fill(objectColor)
-	b.ghostImage, _ = ebiten.NewImage(ballRadius*2, ballRadius*2, ebiten.FilterDefault)
+	b.ghostImage = ebiten.NewImage(ballRadius*2, ballRadius*2)
 	b.ghostImage.Fill(ghostColor)
 	return b
 }

@@ -1,10 +1,11 @@
 package game
 
 import (
+	"bytes"
 	"io/ioutil"
 
-	"github.com/hajimehoshi/ebiten/audio"
-	"github.com/hajimehoshi/ebiten/audio/wav"
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 )
 
 const (
@@ -30,17 +31,12 @@ var sl *soundLibrary
 
 func init() {
 	sl = &soundLibrary{}
-
-	var err error
-	sl.audioContext, err = audio.NewContext(sampleRate)
-	if err != nil {
-		panic(err)
-	}
+	sl.audioContext = audio.NewContext(sampleRate)
 
 	newPlayer := func(fileName string) *audio.Player {
 		if buffer, err := ioutil.ReadFile(fileName); err != nil {
 			panic(err)
-		} else if stream, err := wav.Decode(sl.audioContext, audio.BytesReadSeekCloser(buffer)); err != nil {
+		} else if stream, err := wav.Decode(sl.audioContext, bytes.NewReader(buffer)); err != nil {
 			panic(err)
 		} else if player, err := audio.NewPlayer(sl.audioContext, stream); err != nil {
 			panic(err)

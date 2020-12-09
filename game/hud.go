@@ -3,13 +3,12 @@ package game
 import (
 	"fmt"
 	_ "image/png" // load scanline png
-	"log"
+	"io/ioutil"
 
 	"github.com/golang/freetype/truetype"
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
-	"github.com/hajimehoshi/ebiten/text"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
 )
 
@@ -34,16 +33,20 @@ var (
 	arcadeFonts = make(map[int]font.Face)
 )
 
+func assert(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
+
 func init() {
 	var err error
-	tt, err = truetype.Parse(fonts.ArcadeN_ttf)
-	if err != nil {
-		log.Fatal(err)
-	}
-	scanlines, _, err = ebitenutil.NewImageFromFile("assets/scanlines.png", ebiten.FilterDefault)
-	if err != nil {
-		log.Fatal(err)
-	}
+	binFont, err := ioutil.ReadFile("assets/arcade_n.ttf")
+	assert(err)
+	tt, err = truetype.Parse(binFont)
+	assert(err)
+	scanlines, _, err = ebitenutil.NewImageFromFile("assets/scanlines.png")
+	assert(err)
 
 	arcadeFonts[fontSize] = truetype.NewFace(tt, &truetype.Options{
 		Size: fontSize, DPI: 72, Hinting: font.HintingFull,
@@ -59,7 +62,7 @@ func init() {
 
 func newHUD() *hud {
 	h := &hud{}
-	h.image, _ = ebiten.NewImage(windowWidth, windowHeight, ebiten.FilterDefault)
+	h.image = ebiten.NewImage(windowWidth, windowHeight)
 	sw, sh := scanlines.Size()
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(windowWidth/float64(sw), windowHeight/float64(sh))

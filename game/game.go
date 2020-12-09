@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/inpututil"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type (
@@ -87,7 +87,7 @@ func isMenuSelected(key ebiten.Key) bool {
 }
 
 // Update game state and sprites
-func (g *Gong) Update(screen *ebiten.Image) error {
+func (g *Gong) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
 		os.Exit(0)
 	}

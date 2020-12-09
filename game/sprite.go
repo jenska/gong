@@ -1,7 +1,7 @@
 package game
 
 import (
-	"github.com/hajimehoshi/ebiten"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
 )
 
 const ghostShift = 5

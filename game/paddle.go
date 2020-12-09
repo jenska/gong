@@ -1,8 +1,8 @@
 package game
 
 import (
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/inpututil"
+	ebiten "github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
@@ -36,9 +36,9 @@ func newPaddle(player int, score *int, mode *bool) *paddle {
 		p.downKey = ebiten.KeyDown
 	}
 	p.y = windowHeight/2 - paddleHeight/2
-	p.image, _ = ebiten.NewImage(paddleWidth, paddleHeight, ebiten.FilterDefault)
+	p.image = ebiten.NewImage(paddleWidth, paddleHeight)
 	p.image.Fill(objectColor)
-	p.ghostImage, _ = ebiten.NewImage(paddleWidth, paddleHeight, ebiten.FilterDefault)
+	p.ghostImage = ebiten.NewImage(paddleWidth, paddleHeight)
 	p.ghostImage.Fill(ghostColor)
 	return p
 }
