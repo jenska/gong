@@ -15,7 +15,6 @@ to start
 ![Screenshot](game/assets/screenshot.png)
 
 For a standalone gong game, type
-
 ```bash
 go install
 ```
