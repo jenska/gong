@@ -1,13 +1,14 @@
 package game
 
 import (
+	"embed"
+	_ "embed"
 	"fmt"
+	"image"
 	_ "image/png" // load scanline png
-	"io/ioutil"
 
 	"github.com/golang/freetype/truetype"
 	ebiten "github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
 )
@@ -28,6 +29,9 @@ type hud struct {
 }
 
 var (
+	//go:embed assets/*
+	content embed.FS
+
 	tt          *truetype.Font
 	scanlines   *ebiten.Image
 	arcadeFonts = make(map[int]font.Face)
@@ -41,11 +45,13 @@ func assert(err error) {
 
 func init() {
 	var err error
-	binFont, err := ioutil.ReadFile("assets/arcade_n.ttf")
+	binFont, err := content.ReadFile("assets/arcade_n.ttf")
 	assert(err)
 	tt, err = truetype.Parse(binFont)
 	assert(err)
-	scanlines, _, err = ebitenutil.NewImageFromFile("assets/scanlines.png")
+	imageFile, _ := content.Open("assets/scanlines.png")
+	image, _, _ := image.Decode(imageFile)
+	scanlines = ebiten.NewImageFromImage(image)
 	assert(err)
 
 	arcadeFonts[fontSize] = truetype.NewFace(tt, &truetype.Options{

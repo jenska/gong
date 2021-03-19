@@ -2,7 +2,6 @@ package game
 
 import (
 	"bytes"
-	"io/ioutil"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
@@ -34,7 +33,7 @@ func init() {
 	sl.audioContext = audio.NewContext(sampleRate)
 
 	newPlayer := func(fileName string) *audio.Player {
-		if buffer, err := ioutil.ReadFile(fileName); err != nil {
+		if buffer, err := content.ReadFile(fileName); err != nil {
 			panic(err)
 		} else if stream, err := wav.Decode(sl.audioContext, bytes.NewReader(buffer)); err != nil {
 			panic(err)
