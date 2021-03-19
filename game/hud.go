@@ -2,7 +2,6 @@ package game
 
 import (
 	"embed"
-	_ "embed"
 	"fmt"
 	"image"
 	_ "image/png" // load scanline png
