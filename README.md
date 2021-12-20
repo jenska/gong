@@ -47,5 +47,4 @@ sudo dnf install mesa-libGLU-devel mesa-libGLES-devel libXrandr-devel libXcursor
 - ~~make window resizable~~
 - ~~upgrade to ebiten 2.0~~
 - ~~embedded assets~~
-- AI support (beat the computer opponent, computer vs computer becomes more interessting)
-- WebAssembly support
+- AI support with Tensorflow. Soon to come!
