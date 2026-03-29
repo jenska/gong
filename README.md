@@ -1,28 +1,48 @@
 # Gong! - The Go Pong
 
-Retro styled classic [Pong](https://en.wikipedia.org/wiki/Pong) clone based upon [Ebiten](https://ebiten.org/) game framework.
+Retro styled classic [Pong](https://en.wikipedia.org/wiki/Pong) clone based on the [Ebitengine](https://ebitengine.org/) game framework.
 
-With go version 16 or above installed, type
+## Run from source
+
+With Go **1.22+** installed, run:
 
 ```bash
-git clone http://github.com/jenska/gong
+git clone https://github.com/jenska/gong.git
 cd gong
-go run main.go
+go run .
 ```
-
-to start
 
 ![Screenshot](game/assets/screenshot.png)
 
-For a standalone gong game, type
+## Install
+
+To build and install a standalone `gong` binary into your Go bin path:
+
 ```bash
 go install
 ```
 
+## Makefile targets
+
+Common development tasks are available through `make`:
+
+```bash
+make run
+make build
+make test
+make fmt
+make tidy
+```
+
+## Controls
+
+- `W` / `S`: move left paddle
+- `↑` / `↓`: move right paddle
+- `Esc`: quit
 
 ## Dependencies
 
-Ebiten requires some additional libs installed
+Ebitengine requires additional native libraries on Linux.
 
 ### Debian / Ubuntu
 
@@ -36,15 +56,6 @@ sudo apt install libc6-dev libglu1-mesa-dev libgl1-mesa-dev libxcursor-dev libxi
 sudo dnf install mesa-libGLU-devel mesa-libGLES-devel libXrandr-devel libXcursor-devel libXinerama-devel libXi-devel libXxf86vm-devel alsa-lib-devel pkg-config
 ```
 
-## Thanks to
+## Thanks
 
-[OpenGameArt.Org](https://opengameart.org/)
-
-## Soon to come
-
-- ~~update package structure~~
-- ~~stereo sounds~~
-- ~~make window resizable~~
-- ~~upgrade to ebiten 2.0~~
-- ~~embedded assets~~
-- AI support with Tensorflow. Soon to come!
+- [OpenGameArt.org](https://opengameart.org/)
