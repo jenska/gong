@@ -1,54 +1,61 @@
 package game
 
-import (
-	ebiten "github.com/hajimehoshi/ebiten/v2"
+import "github.com/hajimehoshi/ebiten/v2"
+
+const (
+	ghostShift  = 5
+	trailLength = 3
 )
 
-const ghostShift = 5
-
 type sprite struct {
-	x, y    float64
-	xbuffer []float64
-	ybuffer []float64
+	x, y       float64
+	trailX     [trailLength]float64
+	trailY     [trailLength]float64
+	trailCount int
+	trailNext  int
 
 	image      *ebiten.Image
 	ghostImage *ebiten.Image
 	visible    bool
 }
 
-func (s *sprite) bufferSize() int {
-	if s.xbuffer == nil {
-		s.xbuffer = make([]float64, 0)
-		s.ybuffer = make([]float64, 0)
+func (s *sprite) recordPosition() {
+	if !s.visible {
+		s.trailCount = 0
+		s.trailNext = 0
+		return
 	}
-	return len(s.xbuffer)
+	s.trailX[s.trailNext] = s.x
+	s.trailY[s.trailNext] = s.y
+	s.trailNext = (s.trailNext + 1) % trailLength
+	s.trailCount = min(s.trailCount+1, trailLength)
 }
 
 func (s *sprite) draw(screen *ebiten.Image) {
-	if s.visible {
-		var op *ebiten.DrawImageOptions
-
-		for i := 0; i < s.bufferSize(); i++ {
-			op = &ebiten.DrawImageOptions{}
-			op.GeoM.Translate(s.xbuffer[i], s.ybuffer[i])
-			op.ColorM.Scale(1.0, 1.0, 1.0, float64(i)*0.1)
-			screen.DrawImage(s.image, op)
-		}
-
-		op = &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(s.x+ghostShift, s.y)
-		screen.DrawImage(s.ghostImage, op)
-		op.GeoM.Translate(-ghostShift, 0)
-		screen.DrawImage(s.image, op)
-
-		if s.bufferSize() < 3 {
-			s.xbuffer = append(s.xbuffer, s.x)
-			s.ybuffer = append(s.ybuffer, s.y)
-		} else {
-			s.xbuffer = append(s.xbuffer[1:], s.x)
-			s.ybuffer = append(s.ybuffer[1:], s.y)
-		}
+	if !s.visible {
+		return
 	}
+
+	var op ebiten.DrawImageOptions
+	oldest := 0
+	if s.trailCount == trailLength {
+		oldest = s.trailNext
+	}
+	for i := range s.trailCount {
+		index := (oldest + i) % trailLength
+		op.GeoM.Reset()
+		op.ColorScale.Reset()
+		op.GeoM.Translate(s.trailX[index], s.trailY[index])
+		op.ColorScale.ScaleAlpha(float32(i) * 0.1)
+		screen.DrawImage(s.image, &op)
+	}
+
+	op.GeoM.Reset()
+	op.ColorScale.Reset()
+	op.GeoM.Translate(s.x+ghostShift, s.y)
+	screen.DrawImage(s.ghostImage, &op)
+	op.GeoM.Translate(-ghostShift, 0)
+	screen.DrawImage(s.image, &op)
 }
 
 func (s *sprite) intersects(other *sprite) bool {

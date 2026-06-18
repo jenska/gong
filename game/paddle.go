@@ -2,10 +2,9 @@ package game
 
 import (
 	"math"
-	"math/rand"
-	"time"
+	"math/rand/v2"
 
-	ebiten "github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
@@ -15,12 +14,21 @@ const (
 	paddleShift        = 50
 	paddleAcceleration = 1
 
-	aiMaxSpeed       = 6.0
-	aiDeadZone       = 6.0
-	aiAimError       = 18.0
-	aiIdleAimError   = 10.0
-	aiReactionMin    = 4
-	aiReactionJitter = 6
+	aiMaxSpeed          = 5.8
+	aiAcceleration      = 0.45
+	aiBraking           = 0.75
+	aiDeadZone          = 7.0
+	aiAimError          = 14.0
+	aiDistanceAimError  = 22.0
+	aiIdleAimError      = 12.0
+	aiReactionMin       = 5
+	aiReactionJitter    = 5
+	aiDistanceDelay     = 7
+	aiIdleDelay         = 24
+	aiMistakeChance     = 0.08
+	aiMistakeError      = 55.0
+	aiVelocityError     = 0.08
+	aiObservationYError = 5.0
 )
 
 type paddle struct {
@@ -33,6 +41,7 @@ type paddle struct {
 
 	aiTargetY  float64
 	aiCooldown int
+	aiTracking bool
 	aiRandom   *rand.Rand
 }
 
@@ -52,7 +61,7 @@ func newPaddle(player int, score *int, mode *bool) *paddle {
 	}
 	p.y = windowHeight/2 - paddleHeight/2
 	p.aiTargetY = p.y
-	p.aiRandom = rand.New(rand.NewSource(time.Now().UnixNano() + int64(player*101)))
+	p.aiRandom = rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64()))
 	p.image = ebiten.NewImage(paddleWidth, paddleHeight)
 	p.image.Fill(objectColor)
 	p.ghostImage = ebiten.NewImage(paddleWidth, paddleHeight)
@@ -101,47 +110,81 @@ func (p *paddle) update(g *Gong) {
 		}
 
 		// scored
-		if (g.ball.x < 0 && p.player == rightPlayer) || (g.ball.x > windowWidth && p.player == leftPlayer) {
+		if (g.ball.x+ballDiameter < 0 && p.player == rightPlayer) ||
+			(g.ball.x > windowWidth && p.player == leftPlayer) {
 			*p.score++
-			g.state = interrupt
-			if *p.score > maxScore {
+			if *p.score >= maxScore {
 				playSound(win)
 				g.state = gameOver
 			} else {
 				playSound(lost)
+				g.interrupt()
 			}
 		}
 	}
 	p.visible = g.state == play || g.state == interrupt
+	p.recordPosition()
 }
 
 func (p *paddle) updateComputer(g *Gong) {
+	approaching := p.isBallApproaching(g.ball)
+	if approaching && !p.aiTracking {
+		// A human needs time to notice that possession changed before reacting.
+		p.aiCooldown = p.reactionDelay(g.ball)
+	}
+	p.aiTracking = approaching
+
 	if p.aiCooldown > 0 {
 		p.aiCooldown--
 	}
 
 	if p.aiCooldown == 0 {
 		p.aiTargetY = p.nextAITargetY(g)
-		p.aiCooldown = aiReactionMin + p.aiRandom.Intn(aiReactionJitter+1)
+		if approaching {
+			p.aiCooldown = p.reactionDelay(g.ball)
+		} else {
+			p.aiCooldown = aiIdleDelay + p.aiRandom.IntN(aiReactionJitter+1)
+		}
 	}
 
 	delta := p.aiTargetY - p.y
+	desiredVelocity := min(max(delta*0.12, -aiMaxSpeed), aiMaxSpeed)
 	if math.Abs(delta) < aiDeadZone {
-		p.yVelocity *= 0.7
-		p.y += p.yVelocity
-		return
+		desiredVelocity = 0
 	}
 
-	p.yVelocity = clamp(delta*0.20, -aiMaxSpeed, aiMaxSpeed)
+	acceleration := aiAcceleration
+	if p.yVelocity*desiredVelocity < 0 {
+		acceleration = aiBraking
+	}
+	p.yVelocity = moveTowards(p.yVelocity, desiredVelocity, acceleration)
 	p.y += p.yVelocity
 }
 
 func (p *paddle) nextAITargetY(g *Gong) float64 {
 	if p.isBallApproaching(g.ball) {
-		return p.predictBallY(g.ball) - paddleHeight/2 + p.randomError(aiAimError)
+		observedBall := *g.ball
+		observedBall.y += p.randomError(aiObservationYError)
+		observedBall.yVelocity *= 1 + p.randomError(aiVelocityError)
+
+		distance := math.Abs(p.x - g.ball.x)
+		errorRange := aiAimError + aiDistanceAimError*distance/windowWidth
+		aimError := p.randomError(errorRange)
+		if p.aiRandom.Float64() < aiMistakeChance {
+			aimError += p.randomError(aiMistakeError)
+		}
+
+		target := p.predictBallY(&observedBall) - paddleHeight/2 + aimError
+		return min(max(target, 0), float64(windowHeight-paddleHeight))
 	}
 	idleTarget := float64(windowHeight/2-paddleHeight/2) + p.randomError(aiIdleAimError)
 	return idleTarget
+}
+
+func (p *paddle) reactionDelay(b *ball) int {
+	distance := math.Abs(p.x - b.x)
+	distanceDelay := int(aiDistanceDelay * min(distance/windowWidth, 1))
+	return aiReactionMin + distanceDelay + p.aiRandom.IntN(aiReactionJitter+1)
 }
 
 func (p *paddle) isBallApproaching(b *ball) bool {
@@ -186,12 +229,9 @@ func (p *paddle) randomError(max float64) float64 {
 	return (p.aiRandom.Float64()*2 - 1) * max
 }
 
-func clamp(v, min, max float64) float64 {
-	if v < min {
-		return min
+func moveTowards(current, target, maximumDelta float64) float64 {
+	if math.Abs(target-current) <= maximumDelta {
+		return target
 	}
-	if v > max {
-		return max
-	}
-	return v
+	return current + math.Copysign(maximumDelta, target-current)
 }

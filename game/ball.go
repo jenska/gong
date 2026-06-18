@@ -1,9 +1,10 @@
 package game
 
-import ebiten "github.com/hajimehoshi/ebiten/v2"
+import "github.com/hajimehoshi/ebiten/v2"
 
 const (
 	ballRadius       = 10
+	ballDiameter     = 2 * ballRadius
 	ballVelocity     = 5.0
 	ballAcceleration = 0.1
 )
@@ -16,9 +17,9 @@ type ball struct {
 func newBall() *ball {
 	b := &ball{}
 	b.reset()
-	b.image = ebiten.NewImage(ballRadius*2, ballRadius*2)
+	b.image = ebiten.NewImage(ballDiameter, ballDiameter)
 	b.image.Fill(objectColor)
-	b.ghostImage = ebiten.NewImage(ballRadius*2, ballRadius*2)
+	b.ghostImage = ebiten.NewImage(ballDiameter, ballDiameter)
 	b.ghostImage.Fill(ghostColor)
 	return b
 }
@@ -33,15 +34,16 @@ func (b *ball) update(g *Gong) {
 		b.x += b.xVelocity
 		b.y += b.yVelocity
 
-		if b.y-ballRadius > windowHeight {
+		if b.y+ballDiameter >= windowHeight {
 			playSound(ping)
 			b.yVelocity = -b.yVelocity
-			b.y = windowHeight - ballRadius
-		} else if b.y+ballRadius < 0 {
+			b.y = windowHeight - ballDiameter
+		} else if b.y <= 0 {
 			playSound(ping)
 			b.yVelocity = -b.yVelocity
-			b.y = ballRadius
+			b.y = 0
 		}
 	}
 	b.visible = g.state == play || g.state == interrupt
+	b.recordPosition()
 }

@@ -1,10 +1,19 @@
-# Gong! - The Go Pong
+# Gong! — The Go Pong
 
-Retro styled classic [Pong](https://en.wikipedia.org/wiki/Pong) clone based on the [Ebitengine](https://ebitengine.org/) game framework.
+A retro-styled [Pong](https://en.wikipedia.org/wiki/Pong) clone written in Go
+with [Ebitengine](https://ebitengine.org/).
+
+Features include:
+
+- One-player, two-player, and AI-versus-AI modes
+- Human-like computer players with reaction delay, imperfect prediction,
+  gradual acceleration, braking, and occasional mistakes
+- Fullscreen mode, sound effects, and volume controls
+- Cached HUD rendering and allocation-free sprite trail updates
 
 ## Run from source
 
-With Go **1.22+** installed, run:
+Install Go **1.26 or later**, then run:
 
 ```bash
 git clone https://github.com/jenska/gong.git
@@ -24,7 +33,7 @@ go install
 
 ## Makefile targets
 
-Common development tasks are available through `make`:
+Common development commands:
 
 ```bash
 make run
@@ -36,13 +45,47 @@ make tidy
 
 ## Controls
 
-- `W` / `S`: move left paddle
-- `↑` / `↓`: move right paddle
+### Main menu
+
+- `V`: two players
+- `A`: computer versus player
+- `B`: computer versus computer
+- `H`: show controls
+- `F`: toggle fullscreen
+- `W` / `S`: increase or decrease volume
 - `Esc`: quit
+
+### During play
+
+- `W` / `S`: move the left paddle
+- `↑` / `↓`: move the right paddle
+- `Space`: pause or resume
+- `R`: restart while paused
+
+The first player to 10 points wins.
+
+## Development
+
+Run the complete validation suite:
+
+```bash
+gofmt -w main.go game/*.go
+go test -race ./...
+go vet ./...
+go build ./...
+go fix -diff ./...
+```
+
+Run the rendering microbenchmarks:
+
+```bash
+go test -run '^$' -bench 'Benchmark(HUD|Sprite)' -benchmem ./game
+```
 
 ## Dependencies
 
-Ebitengine requires additional native libraries on Linux.
+Dependencies are managed with Go modules. Ebitengine may require additional
+native development libraries on Linux.
 
 ### Debian / Ubuntu
 

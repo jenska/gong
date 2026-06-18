@@ -3,23 +3,22 @@ package game
 import (
 	"image/color"
 	"math"
-	"os"
-	"time"
 
-	ebiten "github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 type (
 	gameState byte
 
-	// Gong game object
+	// Gong is the game state consumed by Ebitengine.
 	Gong struct {
 		state                    gameState
 		objects                  []gameObject
 		ball                     *ball
 		score1, score2           int
 		isComputer1, isComputer2 bool
+		interruptTicks           int
 	}
 
 	gameObject interface {
@@ -33,6 +32,8 @@ const (
 	windowHeight = 600
 
 	maxScore = 10
+
+	interruptDurationTicks = ebiten.DefaultTPS / 2
 
 	leftPlayer  = 0
 	rightPlayer = 1
@@ -51,7 +52,7 @@ var (
 	objectColor = color.White
 )
 
-// NewGong creates a new gong object
+// NewGong creates a Gong game.
 func NewGong() *Gong {
 	ebiten.SetWindowSize(windowWidth, windowHeight)
 	ebiten.SetWindowTitle("Gong! - The Go Pong")
@@ -63,6 +64,9 @@ func NewGong() *Gong {
 }
 
 func (g *Gong) reset() {
+	g.score1, g.score2 = 0, 0
+	g.isComputer1, g.isComputer2 = false, false
+	g.interruptTicks = 0
 	g.ball = newBall()
 	g.objects = []gameObject{
 		newPaddle(leftPlayer, &g.score1, &g.isComputer1),
@@ -73,8 +77,8 @@ func (g *Gong) reset() {
 	g.state = start
 }
 
-// Layout sets the screen layout
-func (g *Gong) Layout(outsideWidth, outsideHeight int) (int, int) {
+// Layout reports the game's fixed logical screen size.
+func (g *Gong) Layout(_, _ int) (int, int) {
 	return windowWidth, windowHeight
 }
 
@@ -86,10 +90,10 @@ func isMenuSelected(key ebiten.Key) bool {
 	return false
 }
 
-// Update game state and sprites
+// Update advances the game state by one tick.
 func (g *Gong) Update() error {
 	if inpututil.IsKeyJustPressed(ebiten.KeyEscape) {
-		os.Exit(0)
+		return ebiten.Termination
 	}
 	switch g.state {
 	case start:
@@ -130,9 +134,10 @@ func (g *Gong) Update() error {
 			g.reset()
 		}
 	case interrupt:
-		g.ball.reset()
-		time.Sleep(time.Second / 2)
-		g.state = play
+		g.interruptTicks--
+		if g.interruptTicks <= 0 {
+			g.state = play
+		}
 	}
 
 	for _, object := range g.objects {
@@ -141,12 +146,17 @@ func (g *Gong) Update() error {
 	return nil
 }
 
-// Draw updates the game screen elements drawn
+// Draw renders the current game state.
 func (g *Gong) Draw(screen *ebiten.Image) {
 	screen.Fill(screenColor)
 
 	for _, object := range g.objects {
 		object.draw(screen)
 	}
-	//ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.CurrentFPS()))
+}
+
+func (g *Gong) interrupt() {
+	g.ball.reset()
+	g.interruptTicks = interruptDurationTicks
+	g.state = interrupt
 }

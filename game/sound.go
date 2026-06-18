@@ -29,22 +29,27 @@ type (
 var sl *soundLibrary
 
 func init() {
-	sl = &soundLibrary{}
-	sl.audioContext = audio.NewContext(sampleRate)
+	sl = &soundLibrary{
+		audioContext: audio.NewContext(sampleRate),
+		volume:       1,
+		players:      make(map[sound]*audio.Player, 5),
+	}
 
 	newPlayer := func(fileName string) *audio.Player {
-		if buffer, err := content.ReadFile(fileName); err != nil {
+		buffer, err := content.ReadFile(fileName)
+		if err != nil {
 			panic(err)
-		} else if stream, err := wav.Decode(sl.audioContext, bytes.NewReader(buffer)); err != nil {
-			panic(err)
-		} else if player, err := audio.NewPlayer(sl.audioContext, stream); err != nil {
-			panic(err)
-		} else {
-			return player
 		}
+		stream, err := wav.Decode(sl.audioContext, bytes.NewReader(buffer))
+		if err != nil {
+			panic(err)
+		}
+		player, err := audio.NewPlayer(sl.audioContext, stream)
+		if err != nil {
+			panic(err)
+		}
+		return player
 	}
-	sl.volume = 1.0
-	sl.players = make(map[sound]*audio.Player)
 	sl.players[ping] = newPlayer("assets/ping.wav")
 	sl.players[pong] = newPlayer("assets/pong.wav")
 	sl.players[lost] = newPlayer("assets/lost.wav")
@@ -55,7 +60,9 @@ func init() {
 func playSound(s sound) {
 	if audioPlayer, ok := sl.players[s]; ok {
 		audioPlayer.SetVolume(sl.volume)
-		audioPlayer.Rewind()
+		if err := audioPlayer.Rewind(); err != nil {
+			panic(err)
+		}
 		audioPlayer.Play()
 	}
 }
