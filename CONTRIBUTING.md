@@ -22,6 +22,13 @@ go fix -diff ./...
 make web
 ```
 
+On a headless Linux machine, run the test suite through a virtual X server
+because Ebitengine initializes its graphics backend during package startup:
+
+```bash
+xvfb-run --auto-servernum --server-args="-screen 0 1280x720x24" go test -race ./...
+```
+
 ## Project guidelines
 
 - Keep game simulation in `Update`; rendering in `Draw` should not mutate game
