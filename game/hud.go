@@ -32,10 +32,12 @@ type hud struct {
 }
 
 type hudSnapshot struct {
-	state                    gameState
-	score1, score2           int
-	isComputer1, isComputer2 bool
-	volumePercent            int
+	state           gameState
+	score1, score2  int
+	leftController  string
+	rightController string
+	aiLevel         aiLevel
+	volumePercent   int
 }
 
 var (
@@ -89,12 +91,13 @@ func newHUD() *hud {
 
 func (h *hud) update(g *Gong) {
 	snapshot := hudSnapshot{
-		state:         g.state,
-		score1:        g.score1,
-		score2:        g.score2,
-		isComputer1:   g.isComputer1,
-		isComputer2:   g.isComputer2,
-		volumePercent: int(sl.volume * 100),
+		state:           g.state,
+		score1:          g.score1,
+		score2:          g.score2,
+		leftController:  g.leftPaddle.controller.Name(),
+		rightController: g.rightPaddle.controller.Name(),
+		aiLevel:         g.aiLevel,
+		volumePercent:   int(sl.volume * 100),
 	}
 	if h.initialized && snapshot == h.snapshot {
 		return
@@ -108,13 +111,8 @@ func (h *hud) update(g *Gong) {
 	h.scores = ""
 	h.splash = ""
 
-	player1, player2 := "PLAYER 1", "PLAYER 2"
-	if g.isComputer1 {
-		player2, player1 = "PLAYER", "COMPUTER"
-	}
-	if g.isComputer2 {
-		player2 = "COMPUTER"
-	}
+	player1 := controllerDisplayName(snapshot.leftController, "PLAYER 1")
+	player2 := controllerDisplayName(snapshot.rightController, "PLAYER 2")
 
 	switch g.state {
 	case start:
@@ -125,6 +123,8 @@ func (h *hud) update(g *Gong) {
 			"V   -> TWO PLAYERS ",
 			"A   -> AI VS PLAYER",
 			"B   -> AI VS AI    ",
+			"",
+			fmt.Sprintf("1/2/3 -> AI: %s", snapshot.aiLevel),
 			"",
 			"F   -> Fullscreen  ",
 			fmt.Sprintf("W/S -> Volume %3d%% ", snapshot.volumePercent),
@@ -139,7 +139,9 @@ func (h *hud) update(g *Gong) {
 			"",
 			"PLAYER 2:  ",
 			"ARROW UP   ",
-			"ARROW DOWN "}
+			"ARROW DOWN ",
+			"",
+			"MOVE ON HIT -> SPIN"}
 		h.message = "SPACE -> main menu"
 	case pause:
 		h.hints = []string{
@@ -161,6 +163,13 @@ func (h *hud) update(g *Gong) {
 		h.scores = fmt.Sprintf("%s: %d <-> %s: %d", player1, g.score1, player2, g.score2)
 		h.hints = []string{"", "GAME OVER!", winner + " WINS", "", "SPACE -> RESTART"}
 	}
+}
+
+func controllerDisplayName(controllerName, playerName string) string {
+	if controllerName == "PLAYER" {
+		return playerName
+	}
+	return controllerName
 }
 
 func (h *hud) draw(screen *ebiten.Image) {

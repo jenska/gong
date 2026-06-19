@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#202024">
+    <meta
+      name="description"
+      content="Play Gong, a retro Pong game written in Go with Ebitengine."
+    >
+    <title>Gong! — The Go Pong</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="eyebrow">Built with Go + Ebitengine</p>
+        <h1>Gong!</h1>
+        <p class="tagline">Classic Pong with human-like computer players.</p>
+      </header>
+
+      <section id="launcher" class="panel" aria-labelledby="play-title">
+        <h2 id="play-title">Play in your browser</h2>
+        <p id="status">Loading the WebAssembly game…</p>
+        <button id="play" type="button" disabled>Play Gong</button>
+        <p class="hint">
+          Select AI difficulty with <kbd>1</kbd>, <kbd>2</kbd>, or <kbd>3</kbd>.
+          Choose a mode with <kbd>A</kbd>, <kbd>V</kbd>, or <kbd>B</kbd>.
+          Press <kbd>H</kbd> in the game for controls.
+        </p>
+      </section>
+
+      <footer>
+        <a href="https://github.com/jenska/gong">Source and contributions on GitHub</a>
+      </footer>
+    </main>
+
+    <script src="wasm_exec.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

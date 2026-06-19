@@ -2,10 +2,8 @@ package game
 
 import (
 	"math"
-	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
 const (
@@ -13,55 +11,26 @@ const (
 	paddleHeight       = 80
 	paddleShift        = 50
 	paddleAcceleration = 1
-
-	aiMaxSpeed          = 5.8
-	aiAcceleration      = 0.45
-	aiBraking           = 0.75
-	aiDeadZone          = 7.0
-	aiAimError          = 14.0
-	aiDistanceAimError  = 22.0
-	aiIdleAimError      = 12.0
-	aiReactionMin       = 5
-	aiReactionJitter    = 5
-	aiDistanceDelay     = 7
-	aiIdleDelay         = 24
-	aiMistakeChance     = 0.08
-	aiMistakeError      = 55.0
-	aiVelocityError     = 0.08
-	aiObservationYError = 5.0
 )
 
 type paddle struct {
 	sprite
-	yVelocity      float64
-	player         int
-	isComputer     *bool
-	score          *int
-	upKey, downKey ebiten.Key
-
-	aiTargetY  float64
-	aiCooldown int
-	aiTracking bool
-	aiRandom   *rand.Rand
+	yVelocity  float64
+	side       Side
+	controller Controller
 }
 
-func newPaddle(player int, score *int, mode *bool) *paddle {
-	p := &paddle{}
-	p.player = player
-	p.score = score
-	p.isComputer = mode
-	if player == leftPlayer {
+func newPaddle(side Side, controller Controller) *paddle {
+	p := &paddle{
+		side:       side,
+		controller: controller,
+	}
+	if side == LeftSide {
 		p.x = paddleShift
-		p.upKey = ebiten.KeyW
-		p.downKey = ebiten.KeyS
 	} else {
 		p.x = windowWidth - paddleShift - paddleWidth
-		p.upKey = ebiten.KeyUp
-		p.downKey = ebiten.KeyDown
 	}
 	p.y = windowHeight/2 - paddleHeight/2
-	p.aiTargetY = p.y
-	p.aiRandom = rand.New(rand.NewPCG(rand.Uint64(), rand.Uint64()))
 	p.image = ebiten.NewImage(paddleWidth, paddleHeight)
 	p.image.Fill(objectColor)
 	p.ghostImage = ebiten.NewImage(paddleWidth, paddleHeight)
@@ -71,17 +40,8 @@ func newPaddle(player int, score *int, mode *bool) *paddle {
 
 func (p *paddle) update(g *Gong) {
 	if g.state == play {
-		if *p.isComputer {
-			p.updateComputer(g)
-		} else {
-			if inpututil.KeyPressDuration(p.upKey) > 0 {
-				p.yVelocity -= paddleAcceleration
-			}
-			if inpututil.KeyPressDuration(p.downKey) > 0 {
-				p.yVelocity += paddleAcceleration
-			}
-			p.y += p.yVelocity
-		}
+		p.applyControl(p.controller.Control(p.gameView(g)))
+		p.y += p.yVelocity
 
 		if p.y < 0 {
 			p.y = 1.0
@@ -93,140 +53,34 @@ func (p *paddle) update(g *Gong) {
 			playSound(ping)
 		}
 
-		// inelastic collision
-		if p.intersects(&g.ball.sprite) {
-			playSound(pong)
-			if p.player == leftPlayer {
-				g.ball.x = p.x + paddleWidth/2 + ballRadius
-			} else {
-				g.ball.x = p.x - paddleWidth/2 - ballRadius
-			}
-			g.ball.xVelocity = -g.ball.xVelocity - ballAcceleration
-			if g.ball.yVelocity > 0 {
-				g.ball.yVelocity += ballAcceleration
-			} else {
-				g.ball.yVelocity -= ballAcceleration
-			}
-		}
-
-		// scored
-		if (g.ball.x+ballDiameter < 0 && p.player == rightPlayer) ||
-			(g.ball.x > windowWidth && p.player == leftPlayer) {
-			*p.score++
-			if *p.score >= maxScore {
-				playSound(win)
-				g.state = gameOver
-			} else {
-				playSound(lost)
-				g.interrupt()
-			}
-		}
 	}
 	p.visible = g.state == play || g.state == interrupt
 	p.recordPosition()
 }
 
-func (p *paddle) updateComputer(g *Gong) {
-	approaching := p.isBallApproaching(g.ball)
-	if approaching && !p.aiTracking {
-		// A human needs time to notice that possession changed before reacting.
-		p.aiCooldown = p.reactionDelay(g.ball)
+func (p *paddle) gameView(g *Gong) GameView {
+	return GameView{
+		Side:           p.side,
+		Width:          windowWidth,
+		Height:         windowHeight,
+		PaddleX:        p.x,
+		PaddleY:        p.y,
+		PaddleHeight:   paddleHeight,
+		PaddleVelocity: p.yVelocity,
+		BallX:          g.ball.x,
+		BallY:          g.ball.y,
+		BallVelocityX:  g.ball.xVelocity,
+		BallVelocityY:  g.ball.yVelocity,
 	}
-	p.aiTracking = approaching
-
-	if p.aiCooldown > 0 {
-		p.aiCooldown--
-	}
-
-	if p.aiCooldown == 0 {
-		p.aiTargetY = p.nextAITargetY(g)
-		if approaching {
-			p.aiCooldown = p.reactionDelay(g.ball)
-		} else {
-			p.aiCooldown = aiIdleDelay + p.aiRandom.IntN(aiReactionJitter+1)
-		}
-	}
-
-	delta := p.aiTargetY - p.y
-	desiredVelocity := min(max(delta*0.12, -aiMaxSpeed), aiMaxSpeed)
-	if math.Abs(delta) < aiDeadZone {
-		desiredVelocity = 0
-	}
-
-	acceleration := aiAcceleration
-	if p.yVelocity*desiredVelocity < 0 {
-		acceleration = aiBraking
-	}
-	p.yVelocity = moveTowards(p.yVelocity, desiredVelocity, acceleration)
-	p.y += p.yVelocity
 }
 
-func (p *paddle) nextAITargetY(g *Gong) float64 {
-	if p.isBallApproaching(g.ball) {
-		observedBall := *g.ball
-		observedBall.y += p.randomError(aiObservationYError)
-		observedBall.yVelocity *= 1 + p.randomError(aiVelocityError)
-
-		distance := math.Abs(p.x - g.ball.x)
-		errorRange := aiAimError + aiDistanceAimError*distance/windowWidth
-		aimError := p.randomError(errorRange)
-		if p.aiRandom.Float64() < aiMistakeChance {
-			aimError += p.randomError(aiMistakeError)
-		}
-
-		target := p.predictBallY(&observedBall) - paddleHeight/2 + aimError
-		return min(max(target, 0), float64(windowHeight-paddleHeight))
+func (p *paddle) applyControl(control Control) {
+	acceleration := max(control.Acceleration, 0)
+	if p.yVelocity*control.TargetVelocity < 0 ||
+		control.TargetVelocity == 0 && p.yVelocity != 0 {
+		acceleration = max(control.Braking, 0)
 	}
-	idleTarget := float64(windowHeight/2-paddleHeight/2) + p.randomError(aiIdleAimError)
-	return idleTarget
-}
-
-func (p *paddle) reactionDelay(b *ball) int {
-	distance := math.Abs(p.x - b.x)
-	distanceDelay := int(aiDistanceDelay * min(distance/windowWidth, 1))
-	return aiReactionMin + distanceDelay + p.aiRandom.IntN(aiReactionJitter+1)
-}
-
-func (p *paddle) isBallApproaching(b *ball) bool {
-	if p.player == leftPlayer {
-		return b.xVelocity < 0
-	}
-	return b.xVelocity > 0
-}
-
-func (p *paddle) predictBallY(b *ball) float64 {
-	targetX := p.x + paddleWidth/2
-	if p.player == leftPlayer {
-		targetX += ballRadius
-	} else {
-		targetX -= ballRadius
-	}
-
-	if b.xVelocity == 0 {
-		return b.y
-	}
-	timeToReach := (targetX - b.x) / b.xVelocity
-	if timeToReach <= 0 {
-		return b.y
-	}
-
-	predictedY := b.y + b.yVelocity*timeToReach
-	minY := float64(ballRadius)
-	maxY := float64(windowHeight - ballRadius)
-
-	for predictedY < minY || predictedY > maxY {
-		if predictedY < minY {
-			predictedY = minY + (minY - predictedY)
-		} else {
-			predictedY = maxY - (predictedY - maxY)
-		}
-	}
-
-	return predictedY
-}
-
-func (p *paddle) randomError(max float64) float64 {
-	return (p.aiRandom.Float64()*2 - 1) * max
+	p.yVelocity = moveTowards(p.yVelocity, control.TargetVelocity, acceleration)
 }
 
 func moveTowards(current, target, maximumDelta float64) float64 {

@@ -4,7 +4,10 @@ import "testing"
 
 func TestHUDOnlyInvalidatesWhenDisplayedStateChanges(t *testing.T) {
 	h := hud{}
-	g := Gong{state: play, score1: 1, score2: 2}
+	g := testGongForHUD()
+	g.state = play
+	g.score1 = 1
+	g.score2 = 2
 
 	h.update(&g)
 	if !h.dirty {
@@ -53,13 +56,24 @@ func TestSpriteTrailUsesFixedRingBuffer(t *testing.T) {
 
 func BenchmarkHUDUpdateUnchanged(b *testing.B) {
 	h := hud{}
-	g := Gong{state: play, score1: 4, score2: 7, isComputer1: true}
+	g := testGongForHUD()
+	g.state = play
+	g.score1 = 4
+	g.score2 = 7
+	g.leftPaddle.controller = NewHumanLikeAI()
 	h.update(&g)
 
 	b.ReportAllocs()
 	b.ResetTimer()
 	for b.Loop() {
 		h.update(&g)
+	}
+}
+
+func testGongForHUD() Gong {
+	return Gong{
+		leftPaddle:  &paddle{controller: NewKeyboardController(0, 0)},
+		rightPaddle: &paddle{controller: NewKeyboardController(0, 0)},
 	}
 }
 

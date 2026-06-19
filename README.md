@@ -3,11 +3,17 @@
 A retro-styled [Pong](https://en.wikipedia.org/wiki/Pong) clone written in Go
 with [Ebitengine](https://ebitengine.org/).
 
+[Play Gong in your browser](https://jenska.github.io/gong/) ·
+[Contributing guide](CONTRIBUTING.md) ·
+[MIT license](LICENSE)
+
 Features include:
 
 - One-player, two-player, and AI-versus-AI modes
-- Human-like computer players with reaction delay, imperfect prediction,
-  gradual acceleration, braking, and occasional mistakes
+- Beginner, human-like, and perfect-prediction computer players
+- An exported controller API for custom player and AI implementations
+- Contact-based paddle deflection, movement-driven spin, directional serves,
+  and capped speed progression
 - Fullscreen mode, sound effects, and volume controls
 - Cached HUD rendering and allocation-free sprite trail updates
 
@@ -41,6 +47,7 @@ make build
 make test
 make fmt
 make tidy
+make web
 ```
 
 ## Controls
@@ -50,6 +57,9 @@ make tidy
 - `V`: two players
 - `A`: computer versus player
 - `B`: computer versus computer
+- `1`: beginner AI
+- `2`: human-like AI
+- `3`: perfect-prediction AI
 - `H`: show controls
 - `F`: toggle fullscreen
 - `W` / `S`: increase or decrease volume
@@ -63,6 +73,43 @@ make tidy
 - `R`: restart while paused
 
 The first player to 10 points wins.
+
+Where the ball strikes the paddle controls its outgoing angle. Moving the
+paddle during contact adds spin, while sustained rallies gradually increase
+horizontal ball speed up to a fixed cap.
+
+## Custom controllers
+
+Paddle input is defined by the exported `game.Controller` interface. A
+controller receives an immutable view of the current game and returns its
+desired movement:
+
+```go
+type Controller interface {
+    Name() string
+    Control(game.GameView) game.Control
+}
+```
+
+Built-in implementations are created with:
+
+```go
+game.NewKeyboardController(upKey, downKey)
+game.NewBeginnerAI()
+game.NewHumanLikeAI()
+game.NewPerfectAI()
+```
+
+This keeps gameplay, input, and AI strategy separate, making new controllers
+straightforward to implement and test.
+
+Custom controllers can be used directly:
+
+```go
+gong := game.NewGong()
+gong.StartMatch(myLeftController, game.NewPerfectAI())
+ebiten.RunGame(gong)
+```
 
 ## Development
 
@@ -81,6 +128,17 @@ Run the rendering microbenchmarks:
 ```bash
 go test -run '^$' -bench 'Benchmark(HUD|Sprite)' -benchmem ./game
 ```
+
+Build and serve the WebAssembly version locally:
+
+```bash
+make serve-web
+```
+
+Then open <http://localhost:8080>.
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for project
+guidelines and validation requirements.
 
 ## Dependencies
 

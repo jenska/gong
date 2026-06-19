@@ -39,4 +39,13 @@ jobs:
         run: test -z "$(gofmt -l main.go game/*.go)"
 
       - name: Run tests
-        run: make test
+        run: go test -race ./...
+
+      - name: Run vet
+        run: go vet ./...
+
+      - name: Build desktop game
+        run: go build ./...
+
+      - name: Build browser game
+        run: make web
