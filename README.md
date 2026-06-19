@@ -4,7 +4,6 @@ A retro-styled [Pong](https://en.wikipedia.org/wiki/Pong) clone written in Go
 with [Ebitengine](https://ebitengine.org/).
 
 [Play Gong in your browser](https://jenska.github.io/gong/) ·
-[Contributing guide](CONTRIBUTING.md) ·
 [MIT license](LICENSE)
 
 Features include:
@@ -50,34 +49,6 @@ make tidy
 make web
 ```
 
-## Controls
-
-### Main menu
-
-- `V`: two players
-- `A`: computer versus player
-- `B`: computer versus computer
-- `1`: beginner AI
-- `2`: human-like AI
-- `3`: perfect-prediction AI
-- `H`: show controls
-- `F`: toggle fullscreen
-- `W` / `S`: increase or decrease volume
-- `Esc`: quit
-
-### During play
-
-- `W` / `S`: move the left paddle
-- `↑` / `↓`: move the right paddle
-- `Space`: pause or resume
-- `R`: restart while paused
-
-The first player to 10 points wins.
-
-Where the ball strikes the paddle controls its outgoing angle. Moving the
-paddle during contact adds spin, while sustained rallies gradually increase
-horizontal ball speed up to a fixed cap.
-
 ## Custom controllers
 
 Paddle input is defined by the exported `game.Controller` interface. A
@@ -122,13 +93,6 @@ go vet ./...
 go build ./...
 go fix -diff ./...
 ```
-
-Run the rendering microbenchmarks:
-
-```bash
-go test -run '^$' -bench 'Benchmark(HUD|Sprite)' -benchmem ./game
-```
-
 Build and serve the WebAssembly version locally:
 
 ```bash
@@ -136,9 +100,6 @@ make serve-web
 ```
 
 Then open <http://localhost:8080>.
-
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for project
-guidelines and validation requirements.
 
 ## Dependencies
 
