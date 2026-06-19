@@ -1,7 +1,6 @@
 package game
 
 import (
-	"image"
 	"image/color"
 	"math"
 	"math/rand/v2"
@@ -21,7 +20,6 @@ type (
 		leftPaddle     *paddle
 		rightPaddle    *paddle
 		hud            *hud
-		courtImage     *ebiten.Image
 		score1, score2 int
 		aiLevel        aiLevel
 		interruptTicks int
@@ -79,7 +77,6 @@ func (g *Gong) reset() {
 		NewKeyboardController(ebiten.KeyUp, ebiten.KeyDown),
 	)
 	g.hud = newHUD()
-	g.courtImage = newCourtImage()
 	g.objects = []gameObject{
 		g.leftPaddle,
 		g.ball,
@@ -168,7 +165,6 @@ func (g *Gong) Update() error {
 // Draw renders the current game state.
 func (g *Gong) Draw(screen *ebiten.Image) {
 	screen.Fill(screenColor)
-	screen.DrawImage(g.courtImage, nil)
 
 	for _, object := range g.objects {
 		object.draw(screen)
@@ -264,20 +260,4 @@ func (g *Gong) pointScored(side Side) {
 	}
 	playSound(lost)
 	g.interrupt(serveToward)
-}
-
-func newCourtImage() *ebiten.Image {
-	court := ebiten.NewImage(windowWidth, windowHeight)
-	lineColor := color.RGBA{R: 255, G: 255, B: 255, A: 45}
-	const (
-		lineWidth  = 4
-		dashHeight = 20
-		dashGap    = 14
-	)
-	x := windowWidth/2 - lineWidth/2
-	for y := 0; y < windowHeight; y += dashHeight + dashGap {
-		bottom := min(y+dashHeight, windowHeight)
-		court.SubImage(image.Rect(x, y, x+lineWidth, bottom)).(*ebiten.Image).Fill(lineColor)
-	}
-	return court
 }
