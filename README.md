@@ -19,7 +19,7 @@ Features include:
 
 ## Run from source
 
-Install Go **1.26 or later**, then run:
+Install Go **1.27 or later**, then run:
 
 ```bash
 git clone https://github.com/jenska/gong.git

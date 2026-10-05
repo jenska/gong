@@ -21,13 +21,13 @@ func TestBallServeDirection(t *testing.T) {
 
 func TestBallBounceChangesDirectionAndIncreasesSpeed(t *testing.T) {
 	b := ball{
-		sprite:    sprite{x: 700, y: 280},
+		x: 700, y: 280,
 		xVelocity: ballVelocity,
 		yVelocity: 2,
 	}
 	p := paddle{
-		sprite: sprite{x: 730, y: 250},
-		side:   RightSide,
+		x: 730, y: 250,
+		side: RightSide,
 	}
 
 	b.bounceFrom(&p)
@@ -45,16 +45,16 @@ func TestBallBounceChangesDirectionAndIncreasesSpeed(t *testing.T) {
 
 func TestBallImpactControlsDeflection(t *testing.T) {
 	top := ball{
-		sprite:    sprite{y: 200},
+		y:         200,
 		xVelocity: ballVelocity,
 	}
 	bottom := ball{
-		sprite:    sprite{y: 310},
+		y:         310,
 		xVelocity: ballVelocity,
 	}
 	p := paddle{
-		sprite: sprite{x: 730, y: 250},
-		side:   RightSide,
+		x: 730, y: 250,
+		side: RightSide,
 	}
 
 	top.bounceFrom(&p)
@@ -70,13 +70,13 @@ func TestBallImpactControlsDeflection(t *testing.T) {
 
 func TestMovingPaddleAddsSpin(t *testing.T) {
 	stillBall := ball{
-		sprite:    sprite{y: 280},
+		y:         280,
 		xVelocity: ballVelocity,
 	}
 	spinBall := stillBall
 	stillPaddle := paddle{
-		sprite: sprite{x: 730, y: 250},
-		side:   RightSide,
+		x: 730, y: 250,
+		side: RightSide,
 	}
 	movingPaddle := stillPaddle
 	movingPaddle.yVelocity = 5
@@ -92,12 +92,12 @@ func TestMovingPaddleAddsSpin(t *testing.T) {
 
 func TestBallSpeedIsCapped(t *testing.T) {
 	b := ball{
-		sprite:    sprite{y: 250},
+		y:         250,
 		xVelocity: ballMaxXVelocity,
 		yVelocity: ballMaxYVelocity,
 	}
 	p := paddle{
-		sprite:    sprite{x: 730, y: 250},
+		x: 730, y: 250,
 		side:      RightSide,
 		yVelocity: 20,
 	}

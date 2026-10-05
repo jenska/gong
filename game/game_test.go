@@ -6,7 +6,7 @@ func TestInterruptResetsBallWithoutBlocking(t *testing.T) {
 	g := Gong{
 		state: play,
 		ball: &ball{
-			sprite:    sprite{x: 10, y: 20},
+			x: 10, y: 20,
 			xVelocity: -3,
 			yVelocity: 4,
 		},

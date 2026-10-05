@@ -2,7 +2,6 @@ package game
 
 import (
 	"image/color"
-	"math"
 	"math/rand/v2"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -123,9 +122,9 @@ func (g *Gong) Update() error {
 		} else if isMenuSelected(ebiten.KeyF) {
 			ebiten.SetFullscreen(!ebiten.IsFullscreen())
 		} else if isMenuSelected(ebiten.KeyW) {
-			sl.volume = math.Min(1.0, sl.volume+0.1)
+			sl.volume = min(1.0, sl.volume+0.1)
 		} else if isMenuSelected(ebiten.KeyS) {
-			sl.volume = math.Max(0.0, sl.volume-0.1)
+			sl.volume = max(0.0, sl.volume-0.1)
 		}
 	case controls:
 		if isMenuSelected(ebiten.KeySpace) {

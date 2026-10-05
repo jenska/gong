@@ -5,7 +5,7 @@ review and merge.
 
 ## Getting started
 
-1. Install Go 1.26 or later and the native libraries listed in the README.
+1. Install Go 1.27 or later and the native libraries listed in the README.
 2. Fork and clone the repository.
 3. Create a branch from `master`.
 4. Make and test your change.
