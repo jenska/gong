@@ -4,7 +4,6 @@ A retro-styled [Pong](https://en.wikipedia.org/wiki/Pong) clone written in Go
 with [Ebitengine](https://ebitengine.org/).
 
 [Play Gong in your browser](https://jenska.github.io/gong/) ·
-[Contributing guide](CONTRIBUTING.md) ·
 [MIT license](LICENSE)
 
 Features include:
@@ -136,9 +135,6 @@ make serve-web
 ```
 
 Then open <http://localhost:8080>.
-
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for project
-guidelines and validation requirements.
 
 ## Dependencies
 
